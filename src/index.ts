@@ -1,9 +1,12 @@
 import cmdArgs, { OptionDefinition } from "command-line-args";
 import path from "path";
 import { bundleFunctions } from "./bundler";
-import { DifferSpec, parseFunctions, writeSpec } from "./differSpec";
-import calculateHash from "./hasher";
-import segregate from "./segregate";
+import hashesDiffer from "./differ/differ";
+import calculateHash from "./hasher/hasher";
+import segregate from "./hasher/segregate";
+import DifferSpec from "./parser/differSpec";
+import parseSpecFile, { resolveFunctionPaths } from "./parser/parser";
+import writeSpec from "./parser/writer";
 
 const options: OptionDefinition[] = [
     { name: "dir", alias: "d", type: String },
@@ -21,25 +24,24 @@ const specFilePath: string = path.join(dir, ".differspec.json");
 
 async function main() {
     console.log(`Parsing ${specFilePath}`);
-    const functionsResult = await parseFunctions(specFilePath);
-    if (functionsResult.isErr()) {
-        console.error(`Failed to parse functions from spec file`, functionsResult.error);
+    const specResult = await parseSpecFile(specFilePath);
+    if (specResult.isErr()) {
+        console.error(specResult.error.toString());
         return;
     }
 
-    const functions = functionsResult.value;
+    const { functions, hashes: existingHashes } = specResult.value;
     console.log(`Discovered ${Object.keys(functions).length} functions`);
-    console.table(functions);
 
-    const bundleResult = await bundleFunctions(functions);
-
+    const fxWithResolvedPaths = resolveFunctionPaths(functions, dir);
+    const bundleResult = await bundleFunctions(fxWithResolvedPaths);
     if (bundleResult.isErr()) {
         console.error(`Encountered an error while bundling functions`, bundleResult.error);
         return;
     }
 
     const bundles = bundleResult.value;
-    const hashResults = bundles.map((bundle) => calculateHash(bundle));
+    const hashResults = bundles.map(({ fxName, code }) => calculateHash(fxName, code));
     const [hashes, hashErrors] = segregate(hashResults);
 
     if (hashErrors.length != 0) {
@@ -48,20 +50,21 @@ async function main() {
         return;
     }
 
-    const allHashes = hashes
+    const newHashes = hashes
         .map((hash) => hash.value)
-        .reduce((record, { bundle, hash }) => {
-            record[bundle.fxName] = hash;
+        .reduce((record, { fxName, hash }) => {
+            record[fxName] = hash;
             return record;
         }, <Record<string, string>>{});
 
-    console.table(allHashes);
-
     const updatedSpec: DifferSpec = {
         functions,
-        hashes: allHashes,
+        hashes: newHashes,
     };
     console.log(updatedSpec);
+
+    const diffResults = hashesDiffer(existingHashes ?? {}, newHashes);
+    console.log(diffResults);
 
     if (!write) {
         return;

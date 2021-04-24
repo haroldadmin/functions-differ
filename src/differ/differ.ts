@@ -17,10 +17,8 @@ export default function hashesDiffer(oldHashes: Hashes, newHashes: Hashes): Diff
         const newHash = newHashes[fxName];
         const oldHash = oldHashes[fxName];
         if (!oldHash) {
-            console.log(`${fxName} added`);
             added.push(fxName);
         } else if (newHash != oldHash) {
-            console.log(`${fxName} changed`);
             changed.push(fxName);
         } else {
             unchanged.push(fxName);
