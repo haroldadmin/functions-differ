@@ -1,42 +1,29 @@
-import cmdArgs, { OptionDefinition } from "command-line-args";
-import path from "path";
 import { bundleFunctions } from "./bundler";
 import hashesDiffer from "./differ/differ";
 import calculateHash from "./hasher/hasher";
 import segregate from "./hasher/segregate";
+import logger from "./logs/logger";
+import prettify from "./logs/prettify";
+import { dir, prefix, separator, specFilePath, write } from "./options/options";
 import DifferSpec from "./parser/differSpec";
 import parseSpecFile, { resolveFunctionPaths } from "./parser/parser";
 import writeSpec from "./parser/writer";
 
-const options: OptionDefinition[] = [
-    { name: "dir", alias: "d", type: String },
-    { name: "write", alias: "w", type: Boolean, defaultValue: false },
-];
-
-const args = cmdArgs(options);
-const { dir, write } = args;
-if (!dir) {
-    console.error("Error: dir argument not supplied");
-    process.exit(1);
-}
-
-const specFilePath: string = path.join(dir, ".differspec.json");
-
 async function main() {
-    console.log(`Parsing ${specFilePath}`);
+    logger.debug(`Parsing ${specFilePath}`);
     const specResult = await parseSpecFile(specFilePath);
     if (specResult.isErr()) {
-        console.error(specResult.error.toString());
+        logger.error(specResult.error.toString());
         return;
     }
 
     const { functions, hashes: existingHashes } = specResult.value;
-    console.log(`Discovered ${Object.keys(functions).length} functions`);
+    logger.debug(`Discovered ${Object.keys(functions).length} functions`);
 
     const fxWithResolvedPaths = resolveFunctionPaths(functions, dir);
     const bundleResult = await bundleFunctions(fxWithResolvedPaths);
     if (bundleResult.isErr()) {
-        console.error(`Encountered an error while bundling functions`, bundleResult.error);
+        logger.error(`Encountered an error while bundling functions: ${bundleResult.error}`);
         return;
     }
 
@@ -45,8 +32,8 @@ async function main() {
     const [hashes, hashErrors] = segregate(hashResults);
 
     if (hashErrors.length != 0) {
-        console.error(`Encountered ${hashErrors.length} while hashing functions`);
-        hashErrors.forEach((err) => console.error(err.error));
+        logger.error(`Encountered ${hashErrors.length} while hashing functions`);
+        hashErrors.forEach((err) => logger.error(err.error));
         return;
     }
 
@@ -61,23 +48,24 @@ async function main() {
         functions,
         hashes: newHashes,
     };
-    console.log(updatedSpec);
+    logger.debug(prettify(updatedSpec));
 
     const diffResults = hashesDiffer(existingHashes ?? {}, newHashes);
-    console.log(diffResults);
+    logger.debug(prettify(diffResults));
 
-    if (!write) {
-        return;
+    if (write) {
+        const writeResult = await writeSpec(updatedSpec, specFilePath);
+        if (writeResult.isErr()) {
+            const error = writeResult.error;
+            logger.error(`Failed to update .differspec.json: ${error}`);
+        }
     }
 
-    const writeResult = await writeSpec(updatedSpec, specFilePath);
-    if (writeResult.isErr()) {
-        const error = writeResult.error;
-        console.error(`Failed to update .differspec.json: ${error}`, error);
-        return;
-    }
+    const functionsToRedeploy = [...diffResults.added, ...diffResults.changed]
+        .map((fxName) => `${prefix}fxName`)
+        .join(separator);
 
-    console.log(`.differspec.json updated successfully`);
+    logger.log(functionsToRedeploy);
 }
 
 main();
