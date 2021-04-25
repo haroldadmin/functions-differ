@@ -1,6 +1,6 @@
 import { build } from "esbuild";
 import { err, ok, Result } from "neverthrow";
-import logger from "../logs/logger";
+import logger from "../logger";
 import { BundleResult } from "./bundleResult";
 
 export default async function bundleFunctions(
@@ -16,7 +16,9 @@ export default async function bundleFunctions(
 }
 
 async function bundleFunction(fxName: string, fxPath: string): Promise<BundleResult> {
-    const startTime = Date.now();
+    const timeLabel = `Bundle ${fxName}`;
+    logger.time(timeLabel);
+
     const buildResult = await build({
         entryPoints: [fxPath],
         format: "cjs",
@@ -28,8 +30,7 @@ async function bundleFunction(fxName: string, fxPath: string): Promise<BundleRes
         write: false,
     });
 
-    const duration = Date.now() - startTime;
-    logger.debug(`Bundle ${fxName}: ${duration} ms`);
+    logger.timeEnd(timeLabel);
 
     return { fxName, fxPath, code: buildResult.outputFiles[0].text };
 }

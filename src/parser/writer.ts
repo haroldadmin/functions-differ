@@ -1,7 +1,7 @@
 import { err, ok, Result } from "neverthrow";
 import { promises as fs } from "fs";
 import DifferSpec from "./differSpec";
-import prettify from "../logs/prettify";
+import prettify from "./prettify";
 
 export default async function writeSpec(
     spec: DifferSpec,

@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import prettify from "../logs/prettify";
+import prettify from "./prettify";
 import DifferSpec from "./differSpec";
 import { createTempFile } from "./parser.spec";
 import writeSpec from "./writer";

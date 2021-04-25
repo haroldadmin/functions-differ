@@ -1,5 +1,3 @@
-import logger from "../logs/logger";
-
 export type Hashes = Record<string, string>;
 
 export interface DiffResult {
@@ -19,10 +17,8 @@ export default function hashesDiffer(oldHashes: Hashes, newHashes: Hashes): Diff
         const newHash = newHashes[fxName];
         const oldHash = oldHashes[fxName];
         if (!oldHash) {
-            logger.debug(`Added ${fxName}`);
             added.push(fxName);
         } else if (newHash != oldHash) {
-            logger.debug(`Changed ${fxName}`);
             changed.push(fxName);
         } else {
             unchanged.push(fxName);
@@ -33,7 +29,6 @@ export default function hashesDiffer(oldHashes: Hashes, newHashes: Hashes): Diff
         if (fxName in newHashes) {
             return;
         }
-        logger.debug(`Deleted ${fxName}`);
         deleted.push(fxName);
     });
 

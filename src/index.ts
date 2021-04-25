@@ -1,29 +1,29 @@
+import chalk from "chalk";
 import { bundleFunctions } from "./bundler";
 import hashesDiffer from "./differ/differ";
 import calculateHash from "./hasher/hasher";
 import segregate from "./hasher/segregate";
-import logger from "./logs/logger";
-import prettify from "./logs/prettify";
+import logger from "./logger";
 import { dir, prefix, separator, specFilePath, write } from "./options/options";
 import DifferSpec from "./parser/differSpec";
 import parseSpecFile, { resolveFunctionPaths } from "./parser/parser";
 import writeSpec from "./parser/writer";
 
 async function main() {
-    logger.debug(`Parsing ${specFilePath}`);
+    logger.info(`Parsing ${specFilePath}`);
     const specResult = await parseSpecFile(specFilePath);
     if (specResult.isErr()) {
-        logger.error(specResult.error.toString());
+        logger.error(specResult.error);
         return;
     }
 
     const { functions, hashes: existingHashes } = specResult.value;
-    logger.debug(`Discovered ${Object.keys(functions).length} functions`);
+    logger.info(`Discovered ${Object.keys(functions).length} functions`);
 
     const fxWithResolvedPaths = resolveFunctionPaths(functions, dir);
     const bundleResult = await bundleFunctions(fxWithResolvedPaths);
     if (bundleResult.isErr()) {
-        logger.error(`Encountered an error while bundling functions: ${bundleResult.error}`);
+        logger.error("Encountered an error while bundling functions", bundleResult.error);
         return;
     }
 
@@ -44,28 +44,35 @@ async function main() {
             return record;
         }, <Record<string, string>>{});
 
+    const diffResults = hashesDiffer(existingHashes ?? {}, newHashes);
+
     const updatedSpec: DifferSpec = {
         functions,
         hashes: newHashes,
+        lastDiff: diffResults,
     };
-    logger.debug(prettify(updatedSpec));
 
-    const diffResults = hashesDiffer(existingHashes ?? {}, newHashes);
-    logger.debug(prettify(diffResults));
+    Object.entries(newHashes).forEach(([fxName, fxHash]) => {
+        logger.info(`${chalk.blue(fxName)}: ${chalk.green(fxHash)}`);
+    });
+
+    Object.entries(diffResults).forEach(([diffComponent, componentResults]) => {
+        logger.info(`${chalk.yellow(diffComponent)}: ${chalk.green(componentResults)}`);
+    });
 
     if (write) {
         const writeResult = await writeSpec(updatedSpec, specFilePath);
         if (writeResult.isErr()) {
             const error = writeResult.error;
-            logger.error(`Failed to update .differspec.json: ${error}`);
+            logger.error("Failed to update .differspec.json", error);
         }
     }
 
     const functionsToRedeploy = [...diffResults.added, ...diffResults.changed]
-        .map((fxName) => `${prefix}fxName`)
+        .map((fxName) => `${prefix}${fxName}`)
         .join(separator);
 
-    logger.log(functionsToRedeploy);
+    console.log(functionsToRedeploy);
 }
 
 main();

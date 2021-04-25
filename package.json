@@ -14,15 +14,18 @@
     "license": "ISC",
     "dependencies": {
         "@types/command-line-args": "^5.0.0",
+        "chalk": "^4.1.1",
         "command-line-args": "^5.1.1",
         "esbuild": "^0.11.12",
-        "neverthrow": "^4.2.1"
+        "neverthrow": "^4.2.1",
+        "signale": "^1.4.0"
     },
     "devDependencies": {
         "@types/args": "^3.0.0",
         "@types/chai": "^4.2.16",
         "@types/mocha": "^8.2.2",
         "@types/node": "^14.14.37",
+        "@types/signale": "^1.4.1",
         "@typescript-eslint/eslint-plugin": "^4.22.0",
         "@typescript-eslint/parser": "^4.22.0",
         "chai": "^4.3.4",
