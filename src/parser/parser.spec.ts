@@ -83,12 +83,14 @@ describe("function path resolver", () => {
  * It is not mandatory to execute the returned cleanup function, as the temporary file
  * is created in the OS's temp directory .
  *
+ * @param {string} ext File extension for the temp file
  * @return {Promise<[string, () => Promise<void>]>} Temporary file path and cleanup function
  */
-export async function createTempFile(): Promise<[string, () => Promise<void>]> {
+export async function createTempFile(ext = ".temp"): Promise<[string, () => Promise<void>]> {
     const tempDir = os.tmpdir();
     const fileName = Date.now().toString();
-    const tempFilePath = path.join(tempDir, fileName);
+    const tempFilePath = path.join(tempDir, fileName) + ext;
+
     const f = await fs.open(tempFilePath, "w");
     await f.close();
 

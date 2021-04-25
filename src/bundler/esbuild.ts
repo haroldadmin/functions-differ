@@ -15,7 +15,7 @@ export default async function bundleFunctions(
     }
 }
 
-async function bundleFunction(fxName: string, fxPath: string): Promise<BundleResult> {
+export async function bundleFunction(fxName: string, fxPath: string): Promise<BundleResult> {
     const timeLabel = `Bundle ${fxName}`;
     logger.time(timeLabel);
 
