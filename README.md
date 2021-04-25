@@ -5,6 +5,8 @@ A tool to selectively deploy only the Firebase Functions that changed.
 `functions-differ` takes a list of Firebase Functions from your repository and returns a list of functions that changed since its last invocation.
 This helps you selectively deploy only the functions that changed, thus saving time during re-deployments.
 
+It detects any changes to a function by bundling it into a single minified file, and calculating a hash for it. This works for changes in the function's code, change in its installed dependencies, or any other local imports.
+
 ## Usage
 
 - Create a `.differspec.json` file in the directory containing your Firebase Functions:
