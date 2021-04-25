@@ -3,6 +3,11 @@
     "version": "0.0.1",
     "description": "Deploy only the Firebase Functions that changed",
     "main": "lib/index.js",
+    "files": [
+        "lib/**/*.js",
+        "lib/**/*.js.map",
+        "lib/**/*.d.ts"
+    ],
     "scripts": {
         "build": "tsc",
         "build-watch": "tsc --watch",
