@@ -1,0 +1,33 @@
+name: Build and test
+
+on:
+    workflow_dispatch:
+    pull_request:
+    push:
+        branches:
+            - "main"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout latest code
+              uses: actions/checkout@v1
+
+            - name: Setup NodeJS
+              uses: actions/setup-node@v2
+              with:
+                  node-version: "12"
+
+            - name: Download dependencies
+              run: npm install
+
+            - name: Run lint
+              run: npm run lint
+
+            - name: Compile Typescript
+              run: npm run build
+
+            - name: Run tests
+              run: npm run test
