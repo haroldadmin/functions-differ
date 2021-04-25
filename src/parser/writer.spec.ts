@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import prettify from "../logs/prettify";
 import DifferSpec from "./differSpec";
 import { createTempFile } from "./parser.spec";
 import writeSpec from "./writer";
@@ -14,7 +15,7 @@ describe("spec writer", () => {
         expect(writtenContentsResult.isOk()).to.be.true;
 
         const writtenContents = writtenContentsResult._unsafeUnwrap();
-        const expectedContents = JSON.stringify(spec, null, spacing);
+        const expectedContents = prettify(spec, spacing);
         expect(writtenContents).to.equal(expectedContents);
 
         await cleanup();

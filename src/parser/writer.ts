@@ -1,6 +1,7 @@
 import { err, ok, Result } from "neverthrow";
 import { promises as fs } from "fs";
 import DifferSpec from "./differSpec";
+import prettify from "../logs/prettify";
 
 export default async function writeSpec(
     spec: DifferSpec,
@@ -8,7 +9,7 @@ export default async function writeSpec(
     jsonSpacing = 2,
 ): Promise<Result<string, WriteError>> {
     try {
-        const contents = JSON.stringify(spec, null, jsonSpacing);
+        const contents = prettify(spec, jsonSpacing);
         await fs.writeFile(path, contents);
         return ok(contents);
     } catch (error) {
