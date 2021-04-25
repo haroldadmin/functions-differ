@@ -1,0 +1,37 @@
+name: Build and publish
+
+on:
+    workflow_dispatch:
+    push:
+        tags:
+            - "*"
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout latest code
+              uses: actions/checkout@v1
+
+            - name: Setup NodeJS
+              uses: actions/setup-node@v2
+              with:
+                  node-version: "12"
+
+            - name: Download dependencies
+              run: npm install
+
+            - name: Run lint
+              run: npm run lint
+
+            - name: Compile Typescript
+              run: npm run build
+
+            - name: Run tests
+              run: npm run test
+
+            - name: Publish
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && npm publish --access public
