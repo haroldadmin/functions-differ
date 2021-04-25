@@ -74,4 +74,6 @@ Please discuss bugs, feature requests, and help in Github Issues. Pull requests 
 
 ## Installation 
 
-*TODO*
+Install the package with `npm`:
+
+`npm install -g functions-differ`
