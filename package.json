@@ -3,6 +3,7 @@
     "version": "0.0.1",
     "description": "Deploy only the Firebase Functions that changed",
     "main": "lib/index.js",
+    "bin": "lib/index.js",
     "files": [
         "lib/**/*.js",
         "lib/**/*.js.map",

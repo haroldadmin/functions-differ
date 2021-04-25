@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import chalk from "chalk";
 import { bundleFunctions } from "./bundler";
 import hashesDiffer from "./differ/differ";
