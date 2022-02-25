@@ -6,9 +6,9 @@ import hashesDiffer from "./differ/differ";
 import calculateHash from "./hasher/hasher";
 import segregate from "./hasher/segregate";
 import logger from "./logger";
-import { dir, prefix, separator, specFilePath, write } from "./options/options";
+import { bundlerConfigFilePath, dir, prefix, separator, specFilePath, write } from "./options/options";
 import DifferSpec from "./parser/differSpec";
-import parseSpecFile, { resolveFunctionPaths } from "./parser/parser";
+import parseSpecFile, { parseBundlerConfigFile, resolveFunctionPaths } from "./parser/parser";
 import writeSpec from "./parser/writer";
 
 async function main() {
@@ -19,11 +19,18 @@ async function main() {
         return;
     }
 
+    const bundlerConfigSpecResult = await parseBundlerConfigFile(bundlerConfigFilePath);
+    if (bundlerConfigSpecResult.isErr()) {
+        logger.error(bundlerConfigSpecResult.error);
+        return;
+    }
+    const bundlerConfig = bundlerConfigSpecResult.value;
+
     const { functions, hashes: existingHashes } = specResult.value;
     logger.info(`Discovered ${Object.keys(functions).length} functions`);
 
     const fxWithResolvedPaths = resolveFunctionPaths(functions, dir);
-    const bundleResult = await bundleFunctions(fxWithResolvedPaths);
+    const bundleResult = await bundleFunctions(fxWithResolvedPaths, bundlerConfig);
     if (bundleResult.isErr()) {
         logger.error("Encountered an error while bundling functions", bundleResult.error);
         return;
