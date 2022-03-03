@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
-import parseSpecFile, { resolveFunctionPaths } from "./parser";
+import parseSpecFile, { parseBundlerConfigFile, resolveFunctionPaths } from "./parser";
 
 describe("spec file parser", () => {
     it("should return an error if spec file does not exist", async () => {
@@ -75,6 +75,47 @@ describe("function path resolver", () => {
         expect(resolvedFunctions[0]).to.equal("foo");
         expect(resolvedPaths[0]).to.contain(specFileDir);
     });
+});
+
+describe("bundler Config Parser", () => {
+    it("should return an error if spec file does not exist", async () => {
+        const invalidFilePath = path.resolve(".esbuild.json");
+        const parseResult = await parseBundlerConfigFile(invalidFilePath);
+        expect(parseResult.isErr()).to.be.true;
+        expect(parseResult._unsafeUnwrapErr().type).to.equal("file-not-found");
+    });
+
+    it("should return error if parsed file is not JSON", async () => {
+        const [specFile, cleanup] = await createTempFile();
+        const parseResult = await parseBundlerConfigFile(specFile);
+
+        expect(parseResult.isErr()).to.be.true;
+        expect(parseResult._unsafeUnwrapErr().type).to.equal("invalid-json");
+
+        await cleanup();
+    });
+
+    it("should return success if file is valid", async () => {
+        const [specFile, cleanup] = await createTempFile();
+        const validSpec = { external: [] };
+        await fs.writeFile(specFile, JSON.stringify(validSpec));
+
+        const parseResult = await parseBundlerConfigFile(specFile);
+
+        expect(parseResult.isOk()).to.be.true;
+        expect(parseResult._unsafeUnwrap()).to.deep.equal(validSpec);
+
+        await cleanup();
+    });
+
+    it("should return an empty object if the filepath is not given", async() => {
+        const emptyPath = "";
+        const pathResult = await parseBundlerConfigFile(emptyPath);
+
+        expect(pathResult.isErr()).to.be.false;
+        expect(pathResult.isOk()).to.be.true;
+        expect(pathResult._unsafeUnwrap()).to.deep.equal({});
+    })
 });
 
 /**
