@@ -13,8 +13,6 @@ export default async function bundleFunctions(
     bundlerConfig?: BundlerConfig,
 ): Promise<Result<BundleResult[], Error>> {
     const { concurrency = Object.keys(functions).length, ...config } = bundlerConfig ?? {};
-    console.log("Bundling with concurrency", concurrency);
-
     const { errors, results } = await PromisePool.for(Object.entries(functions))
         .withConcurrency(concurrency)
         .process(([fxName, fxPath]) => bundleFunction(fxName, fxPath, config));
