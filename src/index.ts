@@ -2,11 +2,12 @@
 
 import chalk from "chalk";
 import { bundleFunctions } from "./bundler";
+import { BundlerConfig } from "./bundler/esbuild";
 import hashesDiffer from "./differ/differ";
 import calculateHash from "./hasher/hasher";
 import segregate from "./hasher/segregate";
 import logger from "./logger";
-import { bundlerConfigFilePath, dir, prefix, separator, specFilePath, write } from "./options/options";
+import { bundlerConfigFilePath, concurrency, dir, prefix, separator, specFilePath, write } from "./options/options";
 import DifferSpec from "./parser/differSpec";
 import parseSpecFile, { parseBundlerConfigFile, resolveFunctionPaths } from "./parser/parser";
 import writeSpec from "./parser/writer";
@@ -24,7 +25,10 @@ async function main() {
         logger.error(bundlerConfigSpecResult.error);
         return;
     }
-    const bundlerConfig = bundlerConfigSpecResult.value;
+    const bundlerConfig: BundlerConfig = {
+        ...bundlerConfigSpecResult.value,
+        concurrency,
+    };
 
     const { functions, hashes: existingHashes } = specResult.value;
     logger.info(`Discovered ${Object.keys(functions).length} functions`);

@@ -19,6 +19,7 @@
     "author": "Kshitij Chauhan",
     "license": "ISC",
     "dependencies": {
+        "@supercharge/promise-pool": "^2.1.0",
         "@types/command-line-args": "^5.0.0",
         "chalk": "^4.1.2",
         "command-line-args": "^5.1.1",

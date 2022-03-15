@@ -1,21 +1,28 @@
+import { PromisePool } from "@supercharge/promise-pool";
 import { build, BuildOptions } from "esbuild";
 import { err, ok, Result } from "neverthrow";
 import logger from "../logger";
 import { BundleResult } from "./bundleResult";
 
+export type BundlerConfig = BuildOptions & {
+    concurrency?: number;
+};
+
 export default async function bundleFunctions(
     functions: Record<string, string>,
-    bundlerConfig?: BuildOptions,
+    bundlerConfig?: BundlerConfig,
 ): Promise<Result<BundleResult[], Error>> {
-    try {
-        const bundlePromises = Object.entries(functions).map(([fxName, fxPath]) =>
-            bundleFunction(fxName, fxPath, bundlerConfig),
-        );
-        const bundleResults = await Promise.all(bundlePromises);
-        return ok(bundleResults);
-    } catch (error) {
-        return err(<Error>error);
+    const { concurrency = Object.keys(functions).length, ...config } = bundlerConfig ?? {};
+    console.log("Bundling with concurrency", concurrency);
+
+    const { errors, results } = await PromisePool.for(Object.entries(functions))
+        .withConcurrency(concurrency)
+        .process(([fxName, fxPath]) => bundleFunction(fxName, fxPath, config));
+    if (errors.length > 0) {
+        const [error] = errors;
+        return err(error);
     }
+    return ok(results);
 }
 
 export async function bundleFunction(
@@ -35,7 +42,6 @@ export async function bundleFunction(
         treeShaking: true,
         outdir: "bundled",
         ...bundlerConfig,
-        
         write: false,
     });
 
