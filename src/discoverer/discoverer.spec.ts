@@ -4,7 +4,7 @@ import { getFirebaseFunctionsAndPaths } from "./discoverer";
 describe("Function Discovery", function () {
     this.timeout(0);
     it("Should return the functions paths correctly", () => {
-        const dir = process.cwd().replaceAll("\\", "/");
+        const dir = process.cwd().replace(/\\/g, "/");
         const expectedResult = {
             firstFunction: `${dir}/test-e2e/firstFunctions/function.ts`,
             secondFunctionHttpTrigger: `${dir}/test-e2e/secondFunction/http.trigger.ts`,
