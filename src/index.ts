@@ -4,15 +4,45 @@ import chalk from "chalk";
 import { bundleFunctions } from "./bundler";
 import { BundlerConfig } from "./bundler/esbuild";
 import hashesDiffer from "./differ/differ";
+import { getFirebaseFunctionsAndPaths } from "./discoverer/discoverer";
 import calculateHash from "./hasher/hasher";
 import segregate from "./hasher/segregate";
 import logger from "./logger";
-import { bundlerConfigFilePath, concurrency, dir, prefix, separator, specFilePath, write } from "./options/options";
+import {
+    bundlerConfigFilePath,
+    concurrency,
+    dir,
+    prefix,
+    separator,
+    specFilePath,
+    write,
+    discover,
+    indexFilePath,
+} from "./options/options";
 import DifferSpec from "./parser/differSpec";
 import parseSpecFile, { parseBundlerConfigFile, resolveFunctionPaths } from "./parser/parser";
 import writeSpec from "./parser/writer";
 
 async function main() {
+    logger.info(discover);
+    if (discover) {
+        logger.info(
+            `Automatic function discover enabled. Trying to discover functions automatically. IndexFilePath: ${indexFilePath}`,
+        );
+        const functionsPath = getFirebaseFunctionsAndPaths(indexFilePath ?? undefined);
+        logger.info(`Discovered ${Object.keys(functionsPath).length} functions`);
+        logger.info(`Writing spec file`);
+        const specResult = await parseSpecFile(specFilePath);
+
+        if (specResult.isErr()) {
+            logger.info("Spec file not found or invalid. Writing spec file");
+            await writeSpec({ functions: { ...functionsPath } }, specFilePath);
+        } else {
+            const spec = specResult.value;
+            spec.functions = functionsPath;
+            await writeSpec(spec, specFilePath);
+        }
+    }
     logger.info(`Parsing ${specFilePath}`);
     const specResult = await parseSpecFile(specFilePath);
     if (specResult.isErr()) {
