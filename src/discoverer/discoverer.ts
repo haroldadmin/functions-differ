@@ -12,7 +12,7 @@ const getPath = (declaration: ImportDeclaration | ExportDeclaration): string | u
  * @param {string} indexFilePath The path of the index.ts file to be explored
  * @returns {Record<string, string>} A Record containing list of all functions as keys and their paths as values.
  */
-const getExports = (indexFilePath: string = "src/index.ts"): Record<string, string> => {
+const getExports = (indexFilePath = "src/index.ts"): Record<string, string> => {
     if (indexFilePath.startsWith("undefined")) {
         return {};
     }
@@ -33,7 +33,7 @@ const getExports = (indexFilePath: string = "src/index.ts"): Record<string, stri
     let exportMap: Record<string, string> = {};
 
     for (const exp of exports) {
-        let ppath = getPath(exp);
+        const ppath = getPath(exp);
         const exportedFunctions = exp.getNamedExports();
 
         for (const func of exportedFunctions) {
