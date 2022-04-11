@@ -60,7 +60,7 @@ The default output is suitable for passing to `firebase deploy --only` command.
 | prefix        |       | Prefix for each function name output                                                                         | `functions:`                            |
 | sep           |       | Separator for each output function                                                                           | `,`                                     |
 | bundlerConfig |       | Path to the bundler config file which would be passed to esbuild                                             |                                         |
-| concurrency   |       | Number control the concurrency of the bundling process. Useful in CI/CD flows with limited memory            | Number of functions in .differspec.json |
+| concurrency   |       | Number to control the concurrency of the bundling process. Useful in CI/CD flows with limited memory            | Number of functions in .differspec.json |
 | discover      |       | Flag indicating whether to use automatic function path discovery                                             | false                                   |
 | indexFilePath |       | Location of the index.ts file which exports all the functions. Optional. Only used if used with `--discover` | `src/index.ts`                          |
 
