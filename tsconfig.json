@@ -10,8 +10,7 @@
         "skipLibCheck": true,
         "declaration": true,
         "outDir": "lib",
-        "allowJs": true, 
-        "lib": [ "ES2021.String"]
+        "allowJs": true
     },
     "include": ["src"],
     "compileOnSave": true
