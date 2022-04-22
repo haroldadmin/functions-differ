@@ -2,8 +2,7 @@ import { ExportDeclaration, ImportDeclaration, Project } from "ts-morph";
 
 const getPath = (declaration: ImportDeclaration | ExportDeclaration): string | undefined => {
     const sourceFile = declaration.getModuleSpecifierSourceFile()?.getFilePath()?.toString();
-    if (sourceFile) return sourceFile;
-    return undefined;
+    return sourceFile;
 };
 
 /**
@@ -80,4 +79,5 @@ const getExports = (indexFilePath = "src/index.ts"): Record<string, string> => {
 };
 const project = new Project();
 project.addSourceFilesAtPaths("**/*.ts");
+
 export { getExports as getFirebaseFunctionsAndPaths };
