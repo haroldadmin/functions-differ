@@ -1,13 +1,15 @@
 # functions-differ
 
 [![Build and test](https://github.com/haroldadmin/functions-differ/actions/workflows/build-test.yml/badge.svg)](https://github.com/haroldadmin/functions-differ/actions/workflows/build-test.yml)
+[![npm](https://img.shields.io/npm/dm/functions-differ)](https://www.npmjs.com/package/functions-differ)
+[![npm](https://img.shields.io/npm/v/functions-differ)](https://www.npmjs.com/package/functions-differ)
 
 A tool to selectively deploy only the Firebase Functions that changed.
 
 [functions-differ](https://www.npmjs.com/package/functions-differ) takes a list of Firebase Functions from your repository and returns a list of functions that changed since its last invocation.
 This helps you selectively deploy only the functions that changed, thus saving time during re-deployments.
 
-It detects any changes to a function by bundling it into a single minified file, and calculating a hash for it. This works for changes in the function's code, change in its installed dependencies, or any other local imports.
+It detects any changes to a function by bundling it into a single minified file, and calculating a hash for it. This works for changes in the function's code, changes in its installed dependencies, or any other local imports.
 
 ## Usage
 
@@ -22,6 +24,8 @@ my-firebase-project
 ```
 
 -   Specify your function names and their paths in `.differspec.json`:
+
+> This step is optional if you use the experimental `--discover` flag, which lets functions-differ discover the exported Cloud Functions from your project automatically.
 
 ```json
 {
@@ -52,17 +56,17 @@ The default output is suitable for passing to `firebase deploy --only` command.
 
 `functions-differ` supports the following options:
 
-| Name          | Alias | Description                                                                                                  | Default                                 |
-| ------------- | ----- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| dir           | d     | The directory containing `.differspec.json` file                                                             | (current working directory)             |
-| write         | w     | Write output to `.differspec.json` file or not                                                               | true                                    |
-| verbose       | v     | Output verbose logs                                                                                          | false                                   |
-| prefix        |       | Prefix for each function name output                                                                         | `functions:`                            |
-| sep           |       | Separator for each output function                                                                           | `,`                                     |
-| bundlerConfig |       | Path to the bundler config file which would be passed to esbuild                                             |                                         |
-| concurrency   |       | Number to control the concurrency of the bundling process. Useful in CI/CD flows with limited memory            | Number of functions in .differspec.json |
-| discover      |       | Flag indicating whether to use automatic function path discovery                                             | false                                   |
-| indexFilePath |       | Location of the index.ts file which exports all the functions. Optional. Only used if used with `--discover` | `src/index.ts`                          |
+| Name          | Alias | Description                                                                                                                     | Default                                 |
+| ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| dir           | d     | The directory containing `.differspec.json` file                                                                                | (current working directory)             |
+| write         | w     | Write output to `.differspec.json` file or not                                                                                  | true                                    |
+| verbose       | v     | Output verbose logs                                                                                                             | false                                   |
+| prefix        |       | Prefix for each function name output                                                                                            | `functions:`                            |
+| sep           |       | Separator for each output function                                                                                              | `,`                                     |
+| bundlerConfig |       | Path to the bundler config file which would be passed to esbuild                                                                |                                         |
+| concurrency   |       | Number to control the concurrency of the bundling process. Useful in CI/CD flows with limited memory                            | Number of functions in .differspec.json |
+| discover      |       | (**Experimental**) Flag indicating whether to use automatic function path discovery                                             | false                                   |
+| indexFilePath |       | (**Experimental**) Location of the index.ts file which exports all the functions. Optional. Only used if used with `--discover` | `src/index.ts`                          |
 
 ## .differspec.json
 
@@ -86,3 +90,27 @@ Please discuss bugs, feature requests, and help in Github Issues. Pull requests 
 Install the package with `npm`:
 
 `npm install -g functions-differ`
+
+## Notes
+
+### Automatic Functions Discovery (Experimental)
+
+`functions-differ` has experimental support for discovering Cloud Functions exported from your project automatically. This lets you skip defining function paths in your `.differspec.json` file manually.
+
+It does this by using the TypeScript AST on exports from your project's root `index.ts` file. It makes the following assumptions about your codebase:
+
+1. The `src/index.ts` file must contain all exported Cloud Functions from your project, and no other exports.
+2. Every Cloud Function is defined in a separate file. E.g.: `src/auth/login/index.ts`, `src/auth/register/index.ts`, etc.
+
+If you use automatic functions discovery in your project, make sure the above assumptions hold true.
+
+### Integration with CI/CD
+
+I built `functions-differ` to help reduce the average deployment time of Cloud Functions in a project, but does not offer native support for CI builds.
+
+Files generated during CI builds are usually ephemeral. They are lost once the CI build completes. If you plan to run `functions-differ` in your CI workflow, you need to backup the `.differspec.json` generated by the previous build, and restore it for the next built.
+
+Here are some ways to do that for GitHub Actions:
+
+1. Use [caching](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows) between CI runs for the `.differspec.json` file.
+2. Read/store the contents of the `.differspec.json` file in GitHub secrets in each CI run using the `gh` CLI available to every job.
