@@ -25,7 +25,8 @@
         "command-line-args": "^5.1.1",
         "esbuild": "^0.14.24",
         "neverthrow": "^4.2.1",
-        "signale": "^1.4.0"
+        "signale": "^1.4.0",
+        "ts-morph": "^14.0.0"
     },
     "devDependencies": {
         "@types/args": "^5.0.0",
