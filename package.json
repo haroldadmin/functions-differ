@@ -1,6 +1,6 @@
 {
     "name": "functions-differ",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "description": "Deploy only the Firebase Functions that changed",
     "main": "lib/index.js",
     "bin": "lib/index.js",
