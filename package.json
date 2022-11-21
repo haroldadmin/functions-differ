@@ -1,6 +1,6 @@
 {
     "name": "functions-differ",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "description": "Deploy only the Firebase Functions that changed",
     "homepage": "https://github.com/haroldadmin/functions-differ",
     "repository": "https://github.com/haroldadmin/functions-differ",

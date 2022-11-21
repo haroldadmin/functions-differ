@@ -4,7 +4,7 @@ import { err, ok, Result } from "neverthrow";
 import DifferSpec, { ParseError } from "./differSpec";
 import { BuildOptions } from "esbuild";
 
-export default async function parseSpecFile(specFilePath: string): Promise<Result<DifferSpec, ParseError>> {
+export default async function parseSpecFile(specFilePath: string, skipFuncCheck?: boolean): Promise<Result<DifferSpec, ParseError>> {
     const statResult = await checkFileStat(specFilePath);
     if (statResult.isErr()) {
         return err(statResult.error);
@@ -16,7 +16,7 @@ export default async function parseSpecFile(specFilePath: string): Promise<Resul
     }
 
     const specContents = specContentsResult.value;
-    const differSpecResult = parseSpecContents(specContents);
+    const differSpecResult = parseSpecContents(specContents, skipFuncCheck);
     if (differSpecResult.isErr()) {
         return err(differSpecResult.error);
     }
@@ -59,10 +59,10 @@ async function readSpecContents(path: string): Promise<Result<string, ParseError
     }
 }
 
-function parseSpecContents(spec: string): Result<DifferSpec, ParseError> {
+function parseSpecContents(spec: string, skipFuncCheck?: boolean): Result<DifferSpec, ParseError> {
     try {
         const parsedSpec = JSON.parse(spec);
-        if (!parsedSpec.functions) {
+        if (!skipFuncCheck && !parsedSpec.functions) {
             return err(new ParseError("missing-functions", "No `functions` object found in spec file"));
         }
 

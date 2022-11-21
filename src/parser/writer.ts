@@ -4,7 +4,7 @@ import DifferSpec from "./differSpec";
 import prettify from "./prettify";
 
 export default async function writeSpec(
-    spec: DifferSpec,
+    spec: Partial<DifferSpec>,
     path: string,
     jsonSpacing = 2,
 ): Promise<Result<string, WriteError>> {

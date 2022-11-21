@@ -15,8 +15,10 @@ import {
     prefix,
     separator,
     specFilePath,
+    dataFilePath,
     write,
     discover,
+    noSpecUpdate,
     indexFilePath,
 } from "./options/options";
 import DifferSpec from "./parser/differSpec";
@@ -42,11 +44,31 @@ async function main() {
             spec.functions = functionsPath;
             await writeSpec(spec, specFilePath);
         }
+
+        const dataResult = await parseSpecFile(dataFilePath, true);
+        if (dataResult.isErr()) {
+            logger.info("Data file not found or invalid. Writing data file");
+            await writeSpec({}, dataFilePath);
+        }
     }
+    else
+    {
+        const dataResult = await parseSpecFile(dataFilePath, true);
+        if (dataResult.isErr()) {
+            logger.info("Data file not found or invalid. Writing data file");
+            await writeSpec({}, dataFilePath);
+        }
+    }
+
     logger.info(`Parsing ${specFilePath}`);
     const specResult = await parseSpecFile(specFilePath);
     if (specResult.isErr()) {
         logger.error(specResult.error);
+        return;
+    }
+    const dataResult = await parseSpecFile(dataFilePath, true);
+    if (dataResult.isErr()) {
+        logger.error(dataResult.error);
         return;
     }
 
@@ -60,7 +82,9 @@ async function main() {
         concurrency,
     };
 
-    const { functions, hashes: existingHashes } = specResult.value;
+    const { functions } = specResult.value;
+    const { hashes: existingHashes } = dataResult.value;
+
     logger.info(`Discovered ${Object.keys(functions).length} functions`);
 
     const fxWithResolvedPaths = resolveFunctionPaths(functions, dir);
@@ -91,6 +115,8 @@ async function main() {
 
     const updatedSpec: DifferSpec = {
         functions,
+    };
+    const updatedData: Partial<DifferSpec> = {
         hashes: newHashes,
         lastDiff: diffResults,
     };
@@ -104,9 +130,16 @@ async function main() {
     });
 
     if (write) {
-        const writeResult = await writeSpec(updatedSpec, specFilePath);
-        if (writeResult.isErr()) {
-            const error = writeResult.error;
+        if (!noSpecUpdate) {
+            const writeResult = await writeSpec(updatedSpec, specFilePath);
+            if (writeResult.isErr()) {
+                const error = writeResult.error;
+                logger.error("Failed to update .differspec.json", error);
+            }
+        }
+        const writeResult2 = await writeSpec(updatedData, dataFilePath);
+        if (writeResult2.isErr()) {
+            const error = writeResult2.error;
             logger.error("Failed to update .differspec.json", error);
         }
     }
