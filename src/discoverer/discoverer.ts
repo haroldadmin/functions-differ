@@ -28,8 +28,14 @@ const getExports = (indexFilePath = "src/index.ts"): Record<string, string> => {
         }
 
         const filePath = declaration.getSourceFile().getFilePath();
-
-        exports[exportName] = relative(cwd(), filePath);
+        if (declaration.getSymbolOrThrow().getExports().length > 0) {
+            const nestedExports = getExports(filePath);
+            for (const [nestedExportName, nestedFilePath] of Object.entries(nestedExports)) {
+                exports[`${exportName}.${nestedExportName}`] = nestedFilePath;
+            }
+        } else {
+            exports[exportName] = relative(cwd(), filePath);
+        }
     }
 
     return exports;
